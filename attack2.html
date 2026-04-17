@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack 2: Brute Force | HomeSOC Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        
+:root {
+    --bg-main: #0B0F19;
+    --bg-card: #151A28;
+    --accent-primary: #00FF9D;
+    --accent-secondary: #00D2FF;
+    --text-main: #E2E8F0;
+    --text-muted: #94A3B8;
+    --border-color: #232B3E;
+    --font-heading: 'Inter', sans-serif;
+    --font-mono: 'Fira Code', monospace;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-heading);
+    line-height: 1.6;
+}
+nav {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-right: 1rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+}
+nav a:hover, nav a.active {
+    color: var(--bg-main);
+    background: var(--accent-primary);
+    box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+}
+.logo {
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 1px;
+}
+.logo span {
+    color: var(--accent-primary);
+}
+.container {
+    max-width: 1000px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+}
+.header {
+    margin-bottom: 3rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 2rem;
+}
+.header h1 {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+}
+.meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.meta-item strong {
+    color: var(--accent-secondary);
+}
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--accent-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.card:hover::before {
+    opacity: 1;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 255, 157, 0.1);
+    border-color: rgba(0, 255, 157, 0.3);
+}
+.card h2 {
+    color: #fff;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.card h2::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: var(--accent-secondary);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent-secondary);
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.stat-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    padding: 1.25rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-primary);
+    transition: all 0.2s;
+}
+.stat-box.red { border-left-color: #ff3366; }
+.stat-box.purple { border-left-color: #b000ff; }
+.stat-box.orange { border-left-color: #ff8800; }
+.stat-box .label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+.stat-box .val {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--text-main);
+    word-break: break-all;
+}
+pre {
+    background: #090B10;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: #A6ACCD;
+    margin: 1rem 0;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+}
+code.spl {
+    color: var(--accent-primary);
+}
+.placeholder-img {
+    width: 100%;
+    height: 350px;
+    background: rgba(0, 255, 157, 0.03);
+    border: 2px dashed rgba(0, 255, 157, 0.2);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--accent-primary);
+    font-family: var(--font-mono);
+    margin: 1.5rem 0;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+.placeholder-img svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+.placeholder-img:hover {
+    background: rgba(0, 255, 157, 0.08);
+    border-color: var(--accent-primary);
+}
+.tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: rgba(0, 255, 157, 0.1);
+    color: var(--accent-primary);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(0, 255, 157, 0.2);
+}
+.mitre-tag {
+    background: rgba(0, 210, 255, 0.1);
+    color: var(--accent-secondary);
+    border-color: rgba(0, 210, 255, 0.2);
+}
+li { margin-bottom: 0.5rem; margin-left: 1.5rem; }
+p { margin-bottom: 1rem; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+th {
+    background: rgba(0,0,0,0.2);
+    color: var(--text-main);
+    font-weight: 600;
+}
+td { color: var(--text-muted); }
+
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Home<span>SOC</span> Lab</div>
+        <div class="links">
+            <a href="index.html">Home</a>
+            <a href="attack1.html">Attack 1: Nmap</a>
+            <a href="attack2.html" class="active">Attack 2: Brute Force</a>
+            <a href="attack3.html">Attack 3: Exploitation</a>
+            <a href="attack4.html">Attack 4: PowerShell LotL</a>
+            <a href="attack5.html">Attack 5: PrivEsc</a>
+            <a href="dashboard.html">Dashboards</a>
+            
+        </div>
+    </nav>
+    <div class="container">
+        <div class="header">
+            <h1>Phase 2: Brute Force Attack on RDP</h1>
+            <p style="color: var(--text-muted); font-size: 1.15rem; margin-bottom: 0.5rem;">Attempting Credential Access via Remote Desktop</p>
+            <div class="meta">
+    <div class="meta-item"><strong>Report ID:</strong> HSOC-002</div>
+    <div class="meta-item"><strong>Tactic:</strong> Credential Access</div>
+    <div class="meta-item"><strong>MITRE ATT&CK:</strong> <span class="tag mitre-tag">T1110.001</span> Password Guessing</div>
+</div>
+        </div>
+        
+<div class="card">
+    <h2>Attack Overview</h2>
+    <p>Once I knew that RDP was open from the first scan, I tried to get into the system by guessing passwords. This is a very common but loud attack that generates a massive amount of logs. I targeted the local Administrator account to see if I could find a weak password and gain full access to the machine.</p>
+
+    <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-box red">
+            <div class="label">Attacker (Kali VM)</div>
+            <div class="val">192.168.56.104</div>
+        </div>
+        <div class="stat-box">
+            <div class="label">Target (Windows 11)</div>
+            <div class="val">192.168.56.101</div>
+        </div>
+        <div class="stat-box orange">
+            <div class="label">Target Service</div>
+            <div class="val">TCP / 3389 (RDP)</div>
+        </div>
+    </div>
+    
+    <h3 style="margin-top: 1.5rem;">Tools Used</h3>
+    <ul>
+        <li><strong>Hydra:</strong> Fast and flexible password-cracking tool</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h2>Execution Details</h2>
+    <p>I set up a dictionary attack using a custom password list on my Kali machine. I kept the thread count low to make sure the simulation ran smoothly without crashing the target service.</p>
+    <pre><code class="spl">hydra -l Administrator -P /home/kali/passwords.txt -t 4 -V -f rdp://192.168.56.101</code></pre>
+
+    <h3>Command Breakdown:</h3>
+    <ul>
+        <li><code>-l Administrator</code>: Target username</li>
+        <li><code>-P passwords.txt</code>: Path to password list (controlled list used instead of full rockyou.txt for safety)</li>
+        <li><code>-t 4</code>: 4 concurrent threads</li>
+        <li><code>-V</code>: Verbose output to monitor each attempt</li>
+        <li><code>-f</code>: Stop after finding the first valid credential</li>
+        <li><code>rdp://192.168.56.101</code>: Target RDP service</li>
+    </ul>
+    
+    <p style="margin-top: 1rem;">The attack worked exactly as expected. It generated over 13 failed login attempts in a few seconds before I intentionally included the correct password at the end of my list to prove the attack could succeed.</p>
+    
+    <img src="hydra_execution.jpg" alt="Hydra Brute Force Execution" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin: 1.5rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+</div>
+
+<div class="card">
+    <h2>SIEM Detection & Splunk SPL</h2>
+    <h3>1. Monitoring Failed Logins (Event Code 4625)</h3>
+    <p>The first thing I looked for in Splunk was a high volume of failed login attempts. This query isolates the source IP address and counts how many times it failed to authenticate in a short window.</p>
+
+    <pre><code class="spl">index=homesoc_sysmon EventCode=4625
+| stats count as failed_attempts by Source_Network_Address
+| where failed_attempts > 10
+| sort -failed_attempts</code></pre>
+
+    <h3>2. Finding Success After Multiple Failures</h3>
+    <p>This is a more advanced query. It looks for any IP address that had multiple failures followed by a single successful login. This is a huge red flag because it indicates the attacker finally guessed the right password.</p>
+
+    <pre><code class="spl">index=homesoc_sysmon (EventCode=4624 OR EventCode=4625)
+| stats sum(eval(if(EventCode==4625,1,0))) as failures 
+        sum(eval(if(EventCode==4624,1,0))) as successes 
+        by Source_Network_Address
+| where failures > 5 AND successes > 0</code></pre>
+
+    <p>I used a combined strategy in my dashboard to get the full picture. By looking at failures and successes together, I can tell exactly when an account was compromised.</p>
+    <p>The detection logic tracks:</p>
+    <ul>
+        <li>High volumes of failed login attempts (EventCode 4625)</li>
+        <li>Interaction with multiple user accounts (enumeration behavior)</li>
+        <li>Successful login after repeated failures (EventCode 4624)</li>
+    </ul>
+
+    <h3>Combined Detection SPL</h3>
+    <pre><code class="spl">index=homesoc_sysmon (EventCode=4624 OR EventCode=4625)
+| stats sum(eval(if(EventCode==4625,1,0))) as failures 
+        sum(eval(if(EventCode==4624,1,0))) as successes 
+        dc(Account_Name) as unique_users 
+        by Source_Network_Address
+| where failures > 10 AND unique_users > 3 AND successes > 0
+| sort -failures</code></pre>
+
+    <img src="splunk_bruteforce.jpg" alt="Splunk EventCode 4625 Brute Force Match" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin: 1.5rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    
+    <h3>Key Indicators of Compromise (IOCs)</h3>
+    <ul>
+        <li><strong>Windows Event ID:</strong> 4625 (An account failed to log on)</li>
+        <li><strong>Source IP:</strong> 192.168.56.104 (Kali Linux attacker)</li>
+        <li><strong>Target Account:</strong> Administrator</li>
+        <li><strong>Behavior:</strong> Rapid succession of failed login attempts from the same source</li>
+    </ul>
+    
+    <h3 style="margin-top: 2rem;">Analyst Notes and Lessons Learned</h3>
+    <p>The massive spike in Event ID 4625 logs made this attack stick out like a sore thumb in the Splunk dashboard. Even if the attacker never gets the password right, the sheer volume of noise is enough to trigger an investigation.</p>
+    <p>This phase of the lab taught me a few key things:</p>
+    <ul>
+        <li>RDP is a high risk service and should always be behind a firewall or restricted to specific IP addresses.</li>
+        <li>Account lockout policies are vital to stop automated tools from trying thousands of passwords.</li>
+        <li>Real time monitoring in a SIEM is the only way to catch this kind of activity before it is too late.</li>
+    </ul>
+</div>
+
+    </div>
+</body>
+</html>
